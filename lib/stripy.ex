@@ -25,14 +25,17 @@ defmodule Stripy do
   """
 
   @doc "Constructs HTTPoison header list with auth."
-  def headers(%{secret_key: sk, version: v}) do
-    [{"Authorization", "Bearer #{sk}"},
-     {"Content-Type", "application/x-www-form-urlencoded"},
-     {"Stripe-Version", v}]
-  end
+  def headers(%{secret_key: sk, version: v} = opts) do
+    headers = [
+      {"Authorization", "Bearer #{sk}"},
+      {"Content-Type", "application/x-www-form-urlencoded"},
+      {"Stripe-Version", v}
+    ]
 
-  def headers(%{secret_key: sk, version: v, stripe_account: acct}) do
-    [{"Stripe-Account", acct} | headers(%{secret_key: sk, version: v})]
+    case Map.get(opts, :stripe_account) do
+      nil -> headers
+      account -> [{"Stripe-Account", account} | headers]
+    end
   end
 
   @doc "Constructs url with query params from given data."
@@ -62,6 +65,7 @@ defmodule Stripy do
         secret_key: Application.fetch_env!(:stripy, :secret_key),
         version: Application.get_env(:stripy, :version, "2017-06-05")
       }
+
       header_params = Map.merge(header_params, opts)
       api_url = Application.get_env(:stripy, :endpoint, "https://api.stripe.com/v1/")
       options = Application.get_env(:stripy, :httpoison, [])
@@ -75,9 +79,11 @@ defmodule Stripy do
   def parse({:ok, %{status_code: 200, body: body}}) do
     {:ok, Poison.decode!(body)}
   end
+
   def parse({:ok, %{body: body}}) do
     error = Poison.decode!(body) |> Map.fetch!("error")
     {:error, error}
   end
+
   def parse({:error, error}), do: {:error, error}
 end
