@@ -31,6 +31,10 @@ defmodule Stripy do
      {"Stripe-Version", v}]
   end
 
+  def headers(%{secret_key: sk, version: v, stripe_account: acct}) do
+    [{"Stripe-Account", acct} | headers(%{secret_key: sk, version: v})]
+  end
+
   @doc "Constructs url with query params from given data."
   def url(api_url, resource, data) do
     api_url <> resource <> "?" <> URI.encode_query(data)
@@ -49,15 +53,16 @@ defmodule Stripy do
       iex> Stripy.req(:post, "customers", %{"email" => "a@b.c", "metadata[user_id]" => 1})
       {:ok, %HTTPoison.Response{...}}
   """
-  def req(action, resource, data \\ %{}) when action in [:get, :post, :delete] do
+  def req(action, resource, data \\ %{}, opts \\ %{}) when action in [:get, :post, :delete] do
     if Application.get_env(:stripy, :testing, false) do
       mock_server = Application.get_env(:stripy, :mock_server, Stripy.MockServer)
-      mock_server.request(action, resource, data)
+      mock_server.request(action, resource, data, opts)
     else
       header_params = %{
         secret_key: Application.fetch_env!(:stripy, :secret_key),
         version: Application.get_env(:stripy, :version, "2017-06-05")
       }
+      header_params = Map.merge(header_params, opts)
       api_url = Application.get_env(:stripy, :endpoint, "https://api.stripe.com/v1/")
       options = Application.get_env(:stripy, :httpoison, [])
 
