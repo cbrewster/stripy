@@ -7,7 +7,7 @@ defmodule Stripy.Mixfile do
     [
       app: :stripy,
       version: @version,
-      elixir: "~> 1.3",
+      elixir: "~> 1.4",
       name: "Stripy",
       description: "Micro wrapper for the Stripe REST API",
       package: package(),
