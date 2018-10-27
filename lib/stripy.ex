@@ -61,12 +61,10 @@ defmodule Stripy do
       mock_server = Application.get_env(:stripy, :mock_server, Stripy.MockServer)
       mock_server.request(action, resource, data, opts)
     else
-      header_params =
-        %{
-          secret_key: Application.fetch_env!(:stripy, :secret_key),
-          version: Application.get_env(:stripy, :version, "2017-06-05")
-        }
-        |> IO.inspect()
+      header_params = %{
+        secret_key: Application.fetch_env!(:stripy, :secret_key),
+        version: Application.get_env(:stripy, :version, "2017-06-05")
+      }
 
       opts = opts |> Enum.into(%{})
       header_params = Map.merge(header_params, opts)
